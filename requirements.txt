@@ -2,3 +2,4 @@ paramiko
 pytest
 gooey
 pyinstaller
+requests
