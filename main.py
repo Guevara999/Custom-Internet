@@ -12,33 +12,31 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def main() -> None:
+def run_tunnel(cfg: dict) -> None:
     """
-    1) Validate config.
-    2) Use the chosen strategy to do the WebSocket handshake.
-    3) Wrap the socket in Paramiko's SSH transport.
-    4) Expose a local SOCKS proxy on CONFIG['LOCAL_SOCKS_PORT'].
-    5) Block until the user kills the process.
+    Core tunnel logic – usable by both the CLI and the GUI.
+    Expects a config dict with all required keys.
     """
     try:
-        validate_config(CONFIG)
+        validate_config(cfg)
 
-        strategy_cls = get_strategy(CONFIG["MODE"])
-        ws_sock = strategy_cls(CONFIG).establish()
+        strategy_cls = get_strategy(cfg["MODE"])
+        ws_sock = strategy_cls(cfg).establish()
 
         ssh_connection = connect_via_ws_and_start_socks(
             ws_socket=ws_sock,
-            ssh_user=CONFIG["SSH_USERNAME"],
-            ssh_password=CONFIG["SSH_PASSWORD"],
-            ssh_port=CONFIG["SSH_PORT"],
-            local_socks_port=CONFIG["LOCAL_SOCKS_PORT"],
+            ssh_user=cfg["SSH_USERNAME"],
+            ssh_password=cfg["SSH_PASSWORD"],
+            ssh_port=cfg["SSH_PORT"],
+            local_socks_port=cfg["LOCAL_SOCKS_PORT"],
         )
 
         logger.info(
             "SOCKS proxy up on 127.0.0.1:%d – all traffic forwarded over SSH via WS tunnel.",
-            CONFIG["LOCAL_SOCKS_PORT"],
+            cfg["LOCAL_SOCKS_PORT"],
         )
 
+        # Block forever (or until interrupted)
         while True:
             time.sleep(999999)
 
@@ -46,6 +44,12 @@ def main() -> None:
         logger.info("Shutting down (KeyboardInterrupt).")
     except Exception as exc:
         logger.error("Fatal error: %s", exc)
+        raise  # re-raise so the caller can handle if needed
+
+
+def main() -> None:
+    """CLI entry point – uses the static CONFIG from config.py."""
+    run_tunnel(CONFIG)
 
 
 if __name__ == "__main__":
