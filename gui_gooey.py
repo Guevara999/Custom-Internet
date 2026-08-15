@@ -10,7 +10,7 @@ from main import run_tunnel
     language="english",
     show_success_modal=True,
     clear_before_run=True,
-    default_size=(850, 800)
+    default_size=(900, 850)
 )
 def gui_main():
     parser = GooeyParser(description="Enter your tunnel configuration")
@@ -58,6 +58,13 @@ def gui_main():
     parser.add_argument('--front_domain', help='SNI front domain (only for sni_fronted mode)', default='')
     parser.add_argument('--local_socks_port', help='Local SOCKS proxy port', default=1080, type=int)
 
+    # --- Keep-Alive / Ping Settings (New) ---
+    ping_group = parser.add_argument_group("Ping & Keep-Alive (like HTTP Custom)")
+    ping_group.add_argument('--ping_url', help='URL to ping for keep-alive', default='https://dns.google')
+    ping_group.add_argument('--ping_interval', help='Ping interval (seconds)', default=2, type=int)
+    ping_group.add_argument('--ping_timeout', help='Ping timeout (seconds)', default=5, type=int)
+    ping_group.add_argument('--always_reconnect', help='Auto-reconnect on disconnection', widget='CheckBox', default=True)
+
     args = parser.parse_args()
 
     # Build the config dictionary
@@ -74,6 +81,11 @@ def gui_main():
         'SSH_PORT': args.ssh_port,
         'PAYLOAD_TEMPLATE': args.payload_template,
         'SPLIT_DELAY': args.split_delay / 1000.0,  # convert ms to seconds
+        # Ping settings
+        'PING_URL': args.ping_url,
+        'PING_INTERVAL': args.ping_interval,
+        'PING_TIMEOUT': args.ping_timeout,
+        'ALWAYS_RECONNECT': args.always_reconnect,
     }
 
     # Call the core tunnel function
