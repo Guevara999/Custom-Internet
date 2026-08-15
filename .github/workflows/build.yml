@@ -1,4 +1,4 @@
-name: Build Gooey GUI
+name: Build Windows GUI
 
 on:
   push:
