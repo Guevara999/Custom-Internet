@@ -10,7 +10,7 @@ from main import run_tunnel
     language="english",
     show_success_modal=True,
     clear_before_run=True,
-    default_size=(850, 750)
+    default_size=(850, 800)
 )
 def gui_main():
     parser = GooeyParser(description="Enter your tunnel configuration")
@@ -33,7 +33,7 @@ def gui_main():
     payload_group.add_argument('--payload_template', help='Payload with [host], [crlf], [split]', widget='TextArea',
                                default=(
                                    'GET /cdn-cgi/trace HTTP/1.1[crlf]'
-                                   'Host: [host][crlf]'
+                                   'Host: [rotate=apptest.airtel.ug.sg4.bonds.id;firebaseremoteconfig.googleapis.com;airtelcareapp.airtelkenya.com;h.facebook.com;device-provisioning.googleapis.com;www-cloudflaer.speedtest.net][crlf]'
                                    'User-Agent: [ua][crlf]'
                                    'Referer: [https/host][crlf][crlf]'
                                    '[split]'
@@ -50,6 +50,9 @@ def gui_main():
                                    'Content-Length:999999999999[crlf]'
                                ))
 
+    # --- Split Delay ---
+    parser.add_argument('--split_delay', help='Delay between split parts (milliseconds)', default=500, type=int)
+
     # --- Mode ---
     parser.add_argument('--mode', help='Tunnel mode', choices=['direct', 'http_payload', 'sni_fronted'], default='http_payload')
     parser.add_argument('--front_domain', help='SNI front domain (only for sni_fronted mode)', default='')
@@ -57,7 +60,7 @@ def gui_main():
 
     args = parser.parse_args()
 
-    # Build the config dictionary that matches config.py structure
+    # Build the config dictionary
     config = {
         'MODE': args.mode,
         'FRONT_DOMAIN': args.front_domain,
@@ -70,6 +73,7 @@ def gui_main():
         'SSH_PASSWORD': args.ssh_password,
         'SSH_PORT': args.ssh_port,
         'PAYLOAD_TEMPLATE': args.payload_template,
+        'SPLIT_DELAY': args.split_delay / 1000.0,  # convert ms to seconds
     }
 
     # Call the core tunnel function
